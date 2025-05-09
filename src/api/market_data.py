@@ -165,3 +165,23 @@ class AlpacaMarketDataClient:
         response = requests.get(url, headers=self.headers)
         response.raise_for_status()
         return response.json()
+
+    def get_crypto_latest_quote(self, symbols: List[str]) -> Dict[str, Any]:
+        """Get latest crypto quote for each symbol"""
+        url = f"{self.base_url}/v1beta1/crypto/quotes/latest"
+        params = {"symbols": ",".join(symbols)}
+        response = requests.get(url, headers=self.headers, params=params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_crypto_bars(self, symbols: List[str], timeframe: str = "1Hour", limit: int = 500) -> Dict[str, Any]:
+        """Get crypto bars for each symbol"""
+        url = f"{self.base_url}/v1beta1/crypto/bars"
+        params = {
+            "symbols": ",".join(symbols),
+            "timeframe": timeframe,
+            "limit": limit
+        }
+        response = requests.get(url, headers=self.headers, params=params)
+        response.raise_for_status()
+        return response.json()

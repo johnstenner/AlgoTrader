@@ -21,7 +21,8 @@ class BitcoinStrategy(Strategy):
              volume_window: int = 14,
              volatility_window: int = 20,
              volatility_threshold: float = 0.03,
-             position_size: float = 0.1):  # 10% of available cash
+             position_size: float = 0.1,
+             market_symbol: Optional[str] = None):  # Add market_symbol
         """Set up the Bitcoin trading strategy
         
         Args:
@@ -31,9 +32,11 @@ class BitcoinStrategy(Strategy):
             volume_window: Window for volume moving average
             volatility_threshold: Volatility threshold for risk management
             position_size: Size of position as fraction of available cash
+            market_symbol: Optional market symbol to use for market data calls
         """
         self.symbols = [symbol]
         self.symbol = symbol
+        self.market_symbol = market_symbol if market_symbol else symbol.replace("/", "")
         self.fast_ma = fast_ma
         self.slow_ma = slow_ma
         self.volume_window = volume_window
@@ -62,25 +65,23 @@ class BitcoinStrategy(Strategy):
             start_time = pd.Timestamp(one_month_ago, unit='s').isoformat()
             end_time = pd.Timestamp(current_time, unit='s').isoformat()
             
-            # Fetch bars data
-            bars_data = self.market_data_client.get_stock_bars(
-                symbols=[self.symbol],
+            # Fetch bars data (crypto)
+            bars_data = self.market_data_client.get_crypto_bars(
+                symbols=[self.market_symbol],
                 timeframe="1Hour",
-                start=start_time,
-                end=end_time,
                 limit=500  # Get enough data for calculations
             )
             
             # Check if we got data
-            if self.symbol not in bars_data.get("bars", {}):
-                print(f"No data available for {self.symbol}")
+            if self.market_symbol not in bars_data.get("bars", {}):
+                print(f"No data available for {self.market_symbol}")
                 signals[self.symbol] = "hold"
                 return signals
                 
             # Process data
-            bars = bars_data["bars"][self.symbol]
+            bars = bars_data["bars"][self.market_symbol]
             if len(bars) < self.slow_ma + 5:  # Need enough data for MA calculation
-                print(f"Not enough data for {self.symbol} (got {len(bars)} bars)")
+                print(f"Not enough data for {self.market_symbol} (got {len(bars)} bars)")
                 signals[self.symbol] = "hold"
                 return signals
                 
@@ -145,13 +146,13 @@ class BitcoinStrategy(Strategy):
             # Get current positions
             positions = {p["symbol"]: p for p in self.trading_client.get_positions()}
             
-            # Get current price
-            latest_quote = self.market_data_client.get_stock_latest_quote([self.symbol])
-            if self.symbol not in latest_quote.get("quotes", {}):
-                print(f"Could not get latest quote for {self.symbol}")
+            # Get current price (crypto)
+            latest_quote = self.market_data_client.get_crypto_latest_quote([self.market_symbol])
+            if self.market_symbol not in latest_quote.get("quotes", {}):
+                print(f"Could not get latest quote for {self.market_symbol}")
                 return
                 
-            current_price = float(latest_quote["quotes"][self.symbol]["ap"])  # Ask price
+            current_price = float(latest_quote["quotes"][self.market_symbol]["ap"])  # Ask price
             
             # Process signal
             signal = signals.get(self.symbol, "hold")
