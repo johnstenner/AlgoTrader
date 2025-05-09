@@ -75,4 +75,4 @@ class MyCustomStrategy(Strategy):
 
 ## License
 
-MIT
+MIT# AlgoTrader
