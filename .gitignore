@@ -43,3 +43,7 @@ logs/
 
 # Project specific
 config/config.local.yaml
+
+# Alpaca Markets files
+Alpaca_Markets_TradingAP_v1.2_OASI.json
+Alpaca_Markets_MarketDataAPI_v1.2_OAS.json
